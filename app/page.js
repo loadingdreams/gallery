@@ -162,7 +162,7 @@ async function fetchLOC(page, category) {
     const data = await res.json();
     
     return (data.results || []).filter(art => art.image_url && art.image_url.length > 0).map(art => {
-        let thumbUrl = art.image_url.length > 1 ? art.image_url[1] : art.image_url[0];
+        let thumbUrl = art.image_url.length > 2 ? art.image_url[art.image_url.length - 2] : art.image_url[art.image_url.length - 1];
         let highResUrl = art.image_url[art.image_url.length - 1];
         if (thumbUrl && thumbUrl.startsWith('//')) thumbUrl = 'https:' + thumbUrl;
         if (highResUrl && highResUrl.startsWith('//')) highResUrl = 'https:' + highResUrl;
@@ -264,10 +264,10 @@ export default function GalleryPage() {
             <div className={`controls ${!scrollControlsVisible ? 'hide-scroll' : ''}`}>
                 <div className="dropdown">
                     <button className="control-btn" onClick={() => setDropdown(dropdown === 'category' ? null : 'category')}>
-                        {category === 'All' ? 'MEDIUM' : category} ▼
+                        {category} ▼
                     </button>
                     <div className={`dropdown-menu ${dropdown !== 'category' ? 'hidden' : ''}`}>
-                        <button className={`category-option ${category === 'All' ? 'active' : ''}`} onClick={() => { setCategory('All'); setDropdown(null); }}>MEDIUM</button>
+                        <button className={`category-option ${category === 'All' ? 'active' : ''}`} onClick={() => { setCategory('All'); setDropdown(null); }}>All</button>
                         {["Painting", "Photograph", "Sculpture", "Print", "Textile", "Drawing and Watercolor"].map(cat => (
                             <button key={cat} className={`category-option ${category === cat ? 'active' : ''}`} onClick={() => { setCategory(cat); setDropdown(null); }}>{cat}</button>
                         ))}

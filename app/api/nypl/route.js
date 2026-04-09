@@ -4,7 +4,7 @@ export async function GET(request) {
     const category = searchParams.get('q');
     const page = searchParams.get('page') || 1;
 
-    let url = `http://api.repo.nypl.org/api/v2/items/search?publicDomainOnly=true&per_page=12&page=${page}`;
+    let url = `https://api.repo.nypl.org/api/v2/items/search?publicDomainOnly=true&per_page=12&page=${page}`;
     if (category && category !== "All") {
         url += `&q=${encodeURIComponent(category)}`;
     } else {
