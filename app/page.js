@@ -238,7 +238,8 @@ const MUSEUM_CONFIG = {
 // --- React Component ---
 export default function GalleryPage() {
     const [museum, setMuseum] = useState('aic');
-    const [category, setCategory] = useState('All');
+    const [category, setCategory] = useState("All");
+    const [era, setEra] = useState("ALL ERAS");
     const [artworks, setArtworks] = useState([]);
     const [page, setPage] = useState(Math.floor(Math.random() * 80) + 1);
     const [isLoading, setIsLoading] = useState(false);
@@ -253,6 +254,13 @@ export default function GalleryPage() {
     const [infoExpanded, setInfoExpanded] = useState(false);
 
     const loaderRef = useRef(null);
+    const [hasMore, setHasMore] = useState(true);
+
+    useEffect(() => {
+        setPage(1);
+        setHasMore(true);
+        fetchMoreData(true);
+    }, [museum, category, era]);
 
     const fetchMoreData = useCallback(async (reset = false) => {
         if (isLoading) return;
@@ -265,12 +273,16 @@ export default function GalleryPage() {
         
         try {
             let newArtworks = [];
-            if (museum === 'aic') newArtworks = await fetchAIC(targetPage, category);
-            else if (museum === 'cma') newArtworks = await fetchCMA(targetPage, category);
-            else if (museum === 'met') newArtworks = await fetchMet(targetPage, category);
-            else if (museum === 'nypl') newArtworks = await fetchNYPL(targetPage, category);
-            else if (museum === 'loc') newArtworks = await fetchLOC(targetPage, category);
-            else if (museum === 'smithsonian') newArtworks = await fetchSmithsonian(targetPage, category);
+            let catSearch = category;
+            if (category === "All") catSearch = "art";
+            if (era !== "ALL ERAS") catSearch = `${catSearch} ${era}`;
+
+            if (museum === 'aic') newArtworks = await fetchAIC(targetPage, catSearch);
+            else if (museum === 'cma') newArtworks = await fetchCMA(targetPage, catSearch);
+            else if (museum === 'met') newArtworks = await fetchMet(targetPage, catSearch);
+            else if (museum === 'nypl') newArtworks = await fetchNYPL(targetPage, catSearch);
+            else if (museum === 'loc') newArtworks = await fetchLOC(targetPage, catSearch);
+            else if (museum === 'smithsonian') newArtworks = await fetchSmithsonian(targetPage, catSearch);
             
             setArtworks(prev => reset ? newArtworks : [...prev, ...newArtworks]);
             setPage(targetPage + 1);
@@ -324,12 +336,24 @@ export default function GalleryPage() {
             <div className={`controls ${!scrollControlsVisible ? 'hide-scroll' : ''}`}>
                 <div className="dropdown">
                     <button className="control-btn" onClick={() => setDropdown(dropdown === 'category' ? null : 'category')}>
-                        {category}
+                        {category === 'All' ? 'MEDIUM' : category}
                     </button>
                     <div className={`dropdown-menu ${dropdown !== 'category' ? 'hidden' : ''}`}>
                         <button className={`category-option ${category === 'All' ? 'active' : ''}`} onClick={() => { setCategory('All'); setDropdown(null); }}>All</button>
                         {["Painting", "Photograph", "Sculpture", "Print", "Textile", "Drawing and Watercolor"].map(cat => (
                             <button key={cat} className={`category-option ${category === cat ? 'active' : ''}`} onClick={() => { setCategory(cat); setDropdown(null); }}>{cat}</button>
+                        ))}
+                    </div>
+                </div>
+
+                <div className="dropdown">
+                    <button className="control-btn" onClick={() => setDropdown(dropdown === 'era' ? null : 'era')}>
+                        {era}
+                    </button>
+                    <div className={`dropdown-menu ${dropdown !== 'era' ? 'hidden' : ''}`}>
+                        <button className={`category-option ${era === 'ALL ERAS' ? 'active' : ''}`} onClick={() => { setEra('ALL ERAS'); setDropdown(null); }}>ALL ERAS</button>
+                        {["18th Century", "19th Century", "20th Century", "Contemporary"].map(e => (
+                            <button key={e} className={`category-option ${era === e ? 'active' : ''}`} onClick={() => { setEra(e); setDropdown(null); }}>{e}</button>
                         ))}
                     </div>
                 </div>
