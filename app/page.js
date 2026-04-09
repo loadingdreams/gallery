@@ -260,11 +260,6 @@ export default function GalleryPage() {
 
     return (
         <main>
-            <div className="header">
-                <h1>Minimalist Museum Gallery</h1>
-                <p>Public Domain Access</p>
-            </div>
-
             <div className={`controls ${!scrollControlsVisible ? 'hide-scroll' : ''}`}>
                 <div className="dropdown">
                     <button className="control-btn" onClick={() => setDropdown(dropdown === 'category' ? null : 'category')}>
@@ -289,6 +284,10 @@ export default function GalleryPage() {
                         <button className={`museum-option ${museum === 'loc' ? 'active' : ''}`} onClick={() => { setMuseum('loc'); setDropdown(null); }}>Library of Congress</button>
                     </div>
                 </div>
+
+                <button className="control-btn" onClick={() => fetchMoreData(true)}>
+                    Shuffle
+                </button>
             </div>
 
             <div className="gallery">
@@ -306,10 +305,10 @@ export default function GalleryPage() {
             </div>
 
             {/* Brutalist Modal */}
-            <div className={`modal ${!modalArt ? 'hidden' : ''}`} onClick={() => {if(infoExpanded) setInfoExpanded(false); else setModalArt(null);}}>
-                <div className={`modal-content ${showInfo ? 'info-active' : ''}`} onClick={e => e.stopPropagation()}>
-                    {modalArt && <img src={modalArt.highResUrl} alt="High Res" onClick={() => setShowInfo(!showInfo)} />}
-                    <div className={`modal-info ${!showInfo ? 'hidden' : ''}`}>
+            <div className={`modal ${!modalArt ? 'hidden' : ''}`} onClick={() => { setModalArt(null); setInfoExpanded(false); setShowInfo(false); }}>
+                <div className={`modal-content ${showInfo ? 'info-active' : ''}`}>
+                    {modalArt && <img src={modalArt.highResUrl} alt="High Res" onClick={(e) => { e.stopPropagation(); setShowInfo(!showInfo); }} />}
+                    <div className={`modal-info ${!showInfo ? 'hidden' : ''}`} onClick={(e) => e.stopPropagation()}>
                         <div id="info-primary" className={infoExpanded ? 'hidden' : ''}>
                             <h2>{modalArt?.title}</h2>
                             <p className="info-artist">{modalArt?.artist}</p>
