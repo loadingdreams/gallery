@@ -161,7 +161,7 @@ async function fetchLOC(page, category) {
     if (!res.ok) throw new Error("LOC server error");
     const data = await res.json();
     
-    return (data.results || []).filter(art => art.image_url && art.image_url.length > 0).map(art => {
+    return (data.results || []).filter(art => art.image_url && art.image_url.length > 2).map(art => {
         let thumbUrl = art.image_url.length > 2 ? art.image_url[art.image_url.length - 2] : art.image_url[art.image_url.length - 1];
         let highResUrl = art.image_url[art.image_url.length - 1];
         if (thumbUrl && thumbUrl.startsWith('//')) thumbUrl = 'https:' + thumbUrl;
@@ -202,7 +202,10 @@ export default function GalleryPage() {
     const fetchMoreData = useCallback(async (reset = false) => {
         if (isLoading) return;
         setIsLoading(true);
-        const targetPage = reset ? Math.floor(Math.random() * 80) + 1 : page;
+        let maxPage = 80;
+        if (museum === 'loc') maxPage = 8;
+        if (museum === 'nypl') maxPage = 15;
+        const targetPage = reset ? Math.floor(Math.random() * maxPage) + 1 : page;
         
         try {
             let newArtworks = [];
@@ -264,7 +267,7 @@ export default function GalleryPage() {
             <div className={`controls ${!scrollControlsVisible ? 'hide-scroll' : ''}`}>
                 <div className="dropdown">
                     <button className="control-btn" onClick={() => setDropdown(dropdown === 'category' ? null : 'category')}>
-                        {category} ▼
+                        {category}
                     </button>
                     <div className={`dropdown-menu ${dropdown !== 'category' ? 'hidden' : ''}`}>
                         <button className={`category-option ${category === 'All' ? 'active' : ''}`} onClick={() => { setCategory('All'); setDropdown(null); }}>All</button>
@@ -276,7 +279,7 @@ export default function GalleryPage() {
                 
                 <div className="dropdown">
                     <button className="control-btn" onClick={() => setDropdown(dropdown === 'museum' ? null : 'museum')}>
-                        Museums ▼
+                        Museums
                     </button>
                     <div className={`dropdown-menu ${dropdown !== 'museum' ? 'hidden' : ''}`}>
                         <button className={`museum-option ${museum === 'aic' ? 'active' : ''}`} onClick={() => { setMuseum('aic'); setDropdown(null); }}>Art Institute of Chicago</button>
@@ -297,6 +300,10 @@ export default function GalleryPage() {
                     <div key={index} className="artwork-card">
                         <div className="image-container">
                             <img src={art.thumbUrl} alt={art.title} className="loaded" onClick={() => {setModalArt(art); setShowInfo(true); setInfoExpanded(false);}} />
+                        </div>
+                        <div className="card-info" style={{ marginTop: '8px' }}>
+                            <h3 style={{ fontSize: '1rem', fontWeight: 500, margin: '4px 0', textTransform: 'uppercase' }}>{art.title}</h3>
+                            <p style={{ fontSize: '0.85rem', color: '#555', margin: 0, textTransform: 'uppercase' }}>{art.artist}</p>
                         </div>
                     </div>
                 ))}

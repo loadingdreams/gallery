@@ -335,3 +335,4 @@ body {
         padding: 0 1rem 4rem 1rem;
     }
 }
+button:focus { outline: none; }
