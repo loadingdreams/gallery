@@ -193,12 +193,17 @@ async function fetchSmithsonian(page, category) {
         if (mediaList.length === 0) return null;
         
         const media = mediaList[0];
-        const thumbUrl = media.thumbnail || media.content;
         
+        let thumbUrl = media.content || media.thumbnail;
         let highResUrl = thumbUrl;
+        
         if (media.resources) {
             const hiRes = media.resources.find(r => r.label && r.label.includes("High-resolution"));
+            const screenRes = media.resources.find(r => r.label === "Screen Image");
+            
             if (hiRes) highResUrl = hiRes.url;
+            if (screenRes) thumbUrl = screenRes.url;
+            else if (hiRes) thumbUrl = hiRes.url;
         }
 
         // Find primary artist
