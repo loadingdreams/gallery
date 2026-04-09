@@ -180,6 +180,56 @@ async function fetchLOC(page, category) {
     });
 }
 
+// 6. Smithsonian (Via Internal Next.js Proxy)
+async function fetchSmithsonian(page, category) {
+    const res = await fetch(`/api/smithsonian?page=${page}&q=${encodeURIComponent(category)}`);
+    if (!res.ok) throw new Error("Smithsonian server error");
+    const data = await res.json();
+    
+    return (data.response?.rows || []).map(item => {
+        const title = item.title || "Untitled";
+        const meta = item.content?.descriptiveNonRepeating || {};
+        const mediaList = meta.online_media?.media || [];
+        if (mediaList.length === 0) return null;
+        
+        const media = mediaList[0];
+        const thumbUrl = media.thumbnail || media.content;
+        
+        let highResUrl = thumbUrl;
+        if (media.resources) {
+            const hiRes = media.resources.find(r => r.label && r.label.includes("High-resolution"));
+            if (hiRes) highResUrl = hiRes.url;
+        }
+
+        // Find primary artist
+        let artist = "Unknown";
+        if (item.content?.freetext?.name) {
+            const creator = item.content.freetext.name.find(n => n.label === "Artist" || n.label === "Creator");
+            if (creator) artist = creator.content;
+        }
+
+        return {
+            title,
+            artist,
+            date: meta.date_display || "Date Unknown",
+            medium: meta.data_source || "Smithsonian Institution",
+            location: meta.data_source || "Smithsonian Institution",
+            thumbUrl,
+            highResUrl,
+            id: item.id
+        };
+    }).filter(Boolean);
+}
+
+const MUSEUM_CONFIG = {
+    'aic': fetchAIC,
+    'met': fetchMet,
+    'cma': fetchCMA,
+    'nypl': fetchNYPL,
+    'loc': fetchLOC,
+    'smithsonian': fetchSmithsonian
+};
+
 // --- React Component ---
 export default function GalleryPage() {
     const [museum, setMuseum] = useState('aic');
@@ -205,6 +255,7 @@ export default function GalleryPage() {
         let maxPage = 80;
         if (museum === 'loc') maxPage = 8;
         if (museum === 'nypl') maxPage = 15;
+        if (museum === 'smithsonian') maxPage = 50;
         const targetPage = reset ? Math.floor(Math.random() * maxPage) + 1 : page;
         
         try {
@@ -214,6 +265,7 @@ export default function GalleryPage() {
             else if (museum === 'met') newArtworks = await fetchMet(targetPage, category);
             else if (museum === 'nypl') newArtworks = await fetchNYPL(targetPage, category);
             else if (museum === 'loc') newArtworks = await fetchLOC(targetPage, category);
+            else if (museum === 'smithsonian') newArtworks = await fetchSmithsonian(targetPage, category);
             
             setArtworks(prev => reset ? newArtworks : [...prev, ...newArtworks]);
             setPage(targetPage + 1);
@@ -283,10 +335,11 @@ export default function GalleryPage() {
                     </button>
                     <div className={`dropdown-menu ${dropdown !== 'museum' ? 'hidden' : ''}`}>
                         <button className={`museum-option ${museum === 'aic' ? 'active' : ''}`} onClick={() => { setMuseum('aic'); setDropdown(null); }}>Art Institute of Chicago</button>
+                        <button className={`museum-option ${museum === 'met' ? 'active' : ''}`} onClick={() => { setMuseum('met'); setDropdown(null); }}>The Met</button>
                         <button className={`museum-option ${museum === 'cma' ? 'active' : ''}`} onClick={() => { setMuseum('cma'); setDropdown(null); }}>Cleveland Museum of Art</button>
-                        <button className={`museum-option ${museum === 'met' ? 'active' : ''}`} onClick={() => { setMuseum('met'); setDropdown(null); }}>The Met (New York)</button>
                         <button className={`museum-option ${museum === 'nypl' ? 'active' : ''}`} onClick={() => { setMuseum('nypl'); setDropdown(null); }}>New York Public Library</button>
                         <button className={`museum-option ${museum === 'loc' ? 'active' : ''}`} onClick={() => { setMuseum('loc'); setDropdown(null); }}>Library of Congress</button>
+                        <button className={`museum-option ${museum === 'smithsonian' ? 'active' : ''}`} onClick={() => { setMuseum('smithsonian'); setDropdown(null); }}>Smithsonian Open Access</button>
                     </div>
                 </div>
 
