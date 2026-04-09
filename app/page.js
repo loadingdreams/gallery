@@ -301,10 +301,6 @@ export default function GalleryPage() {
                         <div className="image-container">
                             <img src={art.thumbUrl} alt={art.title} className="loaded" onClick={() => {setModalArt(art); setShowInfo(true); setInfoExpanded(false);}} />
                         </div>
-                        <div className="card-info" style={{ marginTop: '8px' }}>
-                            <h3 style={{ fontSize: '1rem', fontWeight: 500, margin: '4px 0', textTransform: 'uppercase' }}>{art.title}</h3>
-                            <p style={{ fontSize: '0.85rem', color: '#555', margin: 0, textTransform: 'uppercase' }}>{art.artist}</p>
-                        </div>
                     </div>
                 ))}
             </div>

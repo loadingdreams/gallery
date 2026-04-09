@@ -335,4 +335,10 @@ body {
         padding: 0 1rem 4rem 1rem;
     }
 }
-button:focus { outline: none; }
+button, button:focus, button:active, button:focus-visible { 
+    outline: none !important; 
+    box-shadow: none !important;
+}
+.control-btn:active, .category-option:active, .museum-option:active {
+    background: transparent !important;
+}
