@@ -1,49 +1,337 @@
+@import url("https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap");
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-html {
-  height: 100%;
-}
-
-html,
-body {
-  max-width: 100vw;
-  overflow-x: hidden;
-}
-
-body {
-  min-height: 100%;
-  display: flex;
-  flex-direction: column;
-  color: var(--foreground);
-  background: var(--background);
-  font-family: Arial, Helvetica, sans-serif;
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
+    --bg-color: #F2F2F2; /* Yeezy off-white */
+    --text-color: #000000;
+    --accent-color: #333333;
+    --font-family: 'IBM Plex Mono', monospace;
 }
 
 * {
-  box-sizing: border-box;
-  padding: 0;
-  margin: 0;
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    text-transform: uppercase;
 }
 
-a {
-  color: inherit;
-  text-decoration: none;
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: var(--font-family);
+    line-height: 1.6;
+    min-height: 100vh;
 }
 
-@media (prefers-color-scheme: dark) {
-  html {
-    color-scheme: dark;
-  }
+.header {
+    text-align: center;
+    padding: 4rem 2rem 1rem 2rem;
+}
+
+.header h1 {
+    font-size: 2rem;
+    font-weight: 500;
+    letter-spacing: -1px;
+    margin-bottom: 0.5rem;
+}
+
+.header p {
+    color: var(--accent-color);
+    font-weight: 300;
+    font-size: 0.9rem;
+}
+
+/* Controls - Floating text, no borders */
+.controls {
+    display: flex;
+    justify-content: center;
+    gap: 2rem;
+    margin-top: 2rem;
+    margin-bottom: 4rem;
+    position: sticky;
+    top: 1rem;
+    z-index: 50;
+    padding: 0.5rem 1rem;
+    pointer-events: none; /* Let clicks pass through empty space */
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease;
+}
+
+.controls.hide-scroll {
+    transform: translateY(-150%);
+    opacity: 0;
+    pointer-events: none;
+}
+
+.controls > * {
+    pointer-events: auto; /* Re-enable clicks on the buttons themselves */
+}
+
+.control-btn {
+    background: transparent;
+    color: var(--text-color);
+    border: none;
+    font-family: var(--font-family);
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-weight: 400;
+    transition: opacity 0.2s ease;
+    opacity: 0.5;
+}
+
+.control-btn:hover {
+    opacity: 1;
+}
+
+.dropdown {
+    position: relative;
+    display: inline-block;
+}
+
+.dropdown-menu {
+    position: absolute;
+    top: 150%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(242, 242, 242, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: none;
+    z-index: 10;
+    min-width: 250px;
+    display: flex;
+    flex-direction: column;
+    padding: 1rem 0;
+}
+
+.dropdown-menu.hidden {
+    display: none;
+}
+
+.category-option, .museum-option, .control-btn {
+    appearance: none;
+    -webkit-appearance: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+.category-option, .museum-option {
+    background: transparent;
+    border: none;
+    color: var(--text-color);
+    padding: 0.5rem 0;
+    text-align: center;
+    cursor: pointer;
+    font-family: var(--font-family);
+    font-size: 0.8rem;
+    opacity: 0.4;
+    transition: opacity 0.2s ease;
+}
+
+.category-option:hover, .museum-option:hover {
+    opacity: 0.8;
+}
+
+.category-option.active, .museum-option.active {
+    font-weight: 600;
+    opacity: 1;
+}
+
+/* Single Column Gallery Architecture */
+.gallery {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8rem; /* Extremely generous padding between "items" */
+    padding: 0 2rem 8rem 2rem;
+    max-width: 800px;
+    margin: 0 auto;
+    min-height: 100vh;
+}
+
+.artwork-card {
+    width: 100%;
+    max-width: 600px;
+    opacity: 0;
+    transform: translateY(20px);
+    animation: fadeInUp 0.6s ease forwards;
+}
+
+@keyframes fadeInUp {
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.image-container {
+    width: 100%;
+    /* Let the image define the container height intrinsically */
+    margin-bottom: 2rem;
+}
+
+.image-container img {
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    transition: opacity 0.5s ease;
+    opacity: 0;
+    cursor: pointer;
+}
+
+.image-container img.loaded {
+    opacity: 1;
+}
+
+.image-container img:hover {
+    opacity: 0.8;
+}
+
+.loader-container {
+    display: flex;
+    justify-content: center;
+    padding: 2rem;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.loader-container.visible {
+    opacity: 1;
+}
+
+.spinner {
+    width: 30px;
+    height: 30px;
+    border: 2px solid rgba(0,0,0,0.1);
+    border-radius: 50%;
+    border-top-color: #000;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    to { transform: rotate(360deg); }
+}
+
+/* Brutalist Modal - Solid Catalog Look */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: var(--bg-color); /* Stark solid color, no blur */
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: 1;
+    transition: opacity 0.3s ease;
+}
+
+.modal.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.modal-content {
+    position: relative;
+    width: 90vw;
+    height: 90vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-content img {
+    max-width: 100%;
+    max-height: 90vh; /* Allow max height */
+    object-fit: contain;
+    cursor: pointer;
+    transition: opacity 0.3s ease;
+}
+
+.modal-content img:hover {
+    opacity: 0.8;
+}
+
+.modal-content.info-active img {
+    opacity: 0.15; /* Heavy fade on the image when info is overlaid */
+}
+
+.modal-info {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    width: 100%;
+    max-width: 600px;
+    transition: opacity 0.3s ease;
+    opacity: 1;
+    pointer-events: none; /* Allows clicks to pass through and hit the image underneath */
+}
+
+.modal-info.hidden {
+    opacity: 0;
+}
+
+.modal-info button, .modal-info .long-desc {
+    pointer-events: auto; /* Re-enable clicks so we can use the + button and scroll */
+}
+
+/* The actual text styling in the modal */
+.modal-info h2 {
+    font-size: 1.1rem;
+    font-weight: 500;
+    margin-bottom: 0.25rem;
+}
+
+.info-artist {
+    font-size: 1rem;
+    color: var(--accent-color);
+    margin-bottom: 0.5rem;
+}
+
+.info-detail {
+    font-size: 0.8rem;
+    color: #444;
+    margin-bottom: 0.25rem;
+}
+
+.info-desc {
+    font-size: 0.85rem;
+    color: var(--text-color);
+    margin-top: 1.5rem;
+    text-transform: none; /* Descriptions should read normally */
+}
+
+#btn-read-more, #btn-read-less {
+    font-size: 1.5rem;
+    margin-top: 1.5rem;
+    padding: 0.5rem;
+}
+
+.long-desc {
+    text-align: left;
+    text-transform: none;
+    font-size: 0.9rem;
+    line-height: 1.8;
+    max-height: 60vh;
+    overflow-y: auto;
+    padding: 0 1rem;
+}
+
+.long-desc p {
+    margin-bottom: 1rem;
+}
+
+#info-primary, #info-expanded {
+    transition: opacity 0.3s ease;
+}
+
+#info-expanded.hidden, #info-primary.hidden {
+    display: none;
+}
+
+@media (max-width: 600px) {
+    .gallery {
+        gap: 4rem;
+        padding: 0 1rem 4rem 1rem;
+    }
 }
