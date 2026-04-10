@@ -408,6 +408,7 @@ export default function GalleryPage() {
                             <p className="info-detail">{modalArt?.date}</p>
                             <p className="info-detail">{modalArt?.medium}</p>
                             <p className="info-detail">{modalArt?.location}</p>
+                            {modalArt?.collectionName && <p className="info-detail" style={{opacity: 0.7}}>{modalArt.collectionName}</p>}
                             {(modalArt?.shortDesc || modalArt?.longDesc || modalArt?.creditLine) && (
                                 <button id="btn-read-more" className="control-btn" onClick={(e) => {e.stopPropagation(); setInfoExpanded(true);}}>+</button>
                             )}
