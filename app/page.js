@@ -275,6 +275,12 @@ export default function GalleryPage() {
         if (museum === 'loc') maxPage = 8;
         if (museum === 'nypl') maxPage = 15;
         if (museum === 'smithsonian') maxPage = 50;
+
+        // Custom string queries (Artists/Collections) rarely have 80 pages of data.
+        // Cap the randomized offset heavily to prevent massive blank pages.
+        if (!["All", "Painting", "Photograph", "Sculpture", "Print", "Textile", "Drawing and Watercolor"].includes(category)) {
+            maxPage = 2; 
+        }
         
         let targetPage = page;
         if (action === 'reset') targetPage = 1;
@@ -422,6 +428,7 @@ export default function GalleryPage() {
                                         const cleanArtist = modalArt.artist.replace(/ *\([^)]*\) */g, "").trim();
                                         setCategory(`"${cleanArtist}"`); 
                                         setEra("ALL ERAS"); setShowInfo(false); setModalArt(null); 
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
                                     }}>VIEW ARTIST</button>
                                 )}
                                 {modalArt?.collectionName && (
@@ -430,6 +437,7 @@ export default function GalleryPage() {
                                         const cleanCol = modalArt.collectionName.replace(/ *\([^)]*\) */g, "").trim();
                                         setCategory(`"${cleanCol}"`); 
                                         setEra("ALL ERAS"); setShowInfo(false); setModalArt(null); 
+                                        window.scrollTo({ top: 0, behavior: 'smooth' });
                                     }}>VIEW COLLECTION</button>
                                 )}
                             </div>
