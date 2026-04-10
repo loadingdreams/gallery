@@ -415,12 +415,18 @@ export default function GalleryPage() {
                             <div style={{ marginTop: '2.5rem', display: 'flex', gap: '2rem', justifyContent: 'center', pointerEvents: 'auto' }}>
                                 {modalArt?.artist && modalArt.artist !== "Unknown" && (
                                     <button className="control-btn" style={{opacity: 0.8, fontSize: '0.85rem'}} onClick={(e) => { 
-                                        e.stopPropagation(); setCategory(modalArt.artist); setEra("ALL ERAS"); setShowInfo(false); setModalArt(null); 
+                                        e.stopPropagation(); 
+                                        const cleanArtist = modalArt.artist.replace(/ *\([^)]*\) */g, "").trim();
+                                        setCategory(`"${cleanArtist}"`); 
+                                        setEra("ALL ERAS"); setShowInfo(false); setModalArt(null); 
                                     }}>VIEW ARTIST</button>
                                 )}
                                 {modalArt?.collectionName && (
                                     <button className="control-btn" style={{opacity: 0.8, fontSize: '0.85rem'}} onClick={(e) => { 
-                                        e.stopPropagation(); setCategory(modalArt.collectionName); setEra("ALL ERAS"); setShowInfo(false); setModalArt(null); 
+                                        e.stopPropagation(); 
+                                        const cleanCol = modalArt.collectionName.replace(/ *\([^)]*\) */g, "").trim();
+                                        setCategory(`"${cleanCol}"`); 
+                                        setEra("ALL ERAS"); setShowInfo(false); setModalArt(null); 
                                     }}>VIEW COLLECTION</button>
                                 )}
                             </div>
