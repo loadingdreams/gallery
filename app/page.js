@@ -428,7 +428,7 @@ export default function GalleryPage() {
                                         const cleanArtist = modalArt.artist.replace(/ *\([^)]*\) */g, "").trim();
                                         setCategory(`"${cleanArtist}"`); 
                                         setEra("ALL ERAS"); setShowInfo(false); setModalArt(null); 
-                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        setTimeout(() => window.scrollTo(0, 0), 10);
                                     }}>VIEW ARTIST</button>
                                 )}
                                 {modalArt?.collectionName && (
@@ -437,7 +437,7 @@ export default function GalleryPage() {
                                         const cleanCol = modalArt.collectionName.replace(/ *\([^)]*\) */g, "").trim();
                                         setCategory(`"${cleanCol}"`); 
                                         setEra("ALL ERAS"); setShowInfo(false); setModalArt(null); 
-                                        window.scrollTo({ top: 0, behavior: 'smooth' });
+                                        setTimeout(() => window.scrollTo(0, 0), 10);
                                     }}>VIEW COLLECTION</button>
                                 )}
                             </div>
