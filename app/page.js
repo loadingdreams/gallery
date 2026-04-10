@@ -256,6 +256,7 @@ const MUSEUM_CONFIG = {
 export default function GalleryPage() {
     const [museum, setMuseum] = useState('aic');
     const [category, setCategory] = useState("All");
+    const [refreshKey, setRefreshKey] = useState(0);
     const [artworks, setArtworks] = useState([]);
     const [page, setPage] = useState(Math.floor(Math.random() * 80) + 1);
     const [totalPages, setTotalPages] = useState(80);
@@ -279,7 +280,7 @@ export default function GalleryPage() {
         setHasMore(true);
         setArtworks([]);
         fetchMoreData('reset');
-    }, [museum, category]);
+    }, [museum, category, refreshKey]);
 
     const fetchMoreData = useCallback(async (action = 'append') => {
         if (isLoading && action !== 'reset') return;
@@ -293,7 +294,8 @@ export default function GalleryPage() {
         try {
             let newArtworks = [];
             let catSearch = category;
-            if (category === "All") catSearch = "art";
+            // Only AIC needs 'art' as a default text query; other museums browse all without a search term
+            if (museum === 'aic' && category === "All") catSearch = "art";
 
             let result;
             if (museum === 'aic') result = await fetchAIC(targetPage, catSearch);
@@ -355,6 +357,7 @@ export default function GalleryPage() {
                 <button className="control-btn" onClick={() => { 
                     setMuseum('aic'); 
                     setCategory('All'); 
+                    setRefreshKey(k => k + 1);
                     window.scrollTo(0, 0); 
                 }}>
                     HOME
