@@ -265,17 +265,20 @@ export default function GalleryPage() {
     useEffect(() => {
         setPage(1);
         setHasMore(true);
-        fetchMoreData(true);
+        fetchMoreData('reset');
     }, [museum, category, era]);
 
-    const fetchMoreData = useCallback(async (reset = false) => {
+    const fetchMoreData = useCallback(async (action = 'append') => {
         if (isLoading) return;
         setIsLoading(true);
         let maxPage = 80;
         if (museum === 'loc') maxPage = 8;
         if (museum === 'nypl') maxPage = 15;
         if (museum === 'smithsonian') maxPage = 50;
-        const targetPage = reset ? Math.floor(Math.random() * maxPage) + 1 : page;
+        
+        let targetPage = page;
+        if (action === 'reset') targetPage = 1;
+        if (action === 'random') targetPage = Math.floor(Math.random() * maxPage) + 1;
         
         try {
             let newArtworks = [];
@@ -290,7 +293,7 @@ export default function GalleryPage() {
             else if (museum === 'loc') newArtworks = await fetchLOC(targetPage, catSearch);
             else if (museum === 'smithsonian') newArtworks = await fetchSmithsonian(targetPage, catSearch);
             
-            setArtworks(prev => reset ? newArtworks : [...prev, ...newArtworks]);
+            setArtworks(prev => action === 'append' ? [...prev, ...newArtworks] : newArtworks);
             setPage(targetPage + 1);
         } catch (e) {
             console.error("Fetch Error:", e);
@@ -299,16 +302,16 @@ export default function GalleryPage() {
         }
     }, [isLoading, page, museum, category]);
 
-    // Initial load & when state changes
+    // Initial load
     useEffect(() => {
-        fetchMoreData(true);
+        fetchMoreData('random');
     }, [museum, category]);
 
     // Infinite scroll observer
     useEffect(() => {
         const observer = new IntersectionObserver((entries) => {
             if (entries[0].isIntersecting && !isLoading) {
-                fetchMoreData(false);
+                fetchMoreData('append');
             }
         }, { rootMargin: '100px' });
         if (loaderRef.current) observer.observe(loaderRef.current);
@@ -378,7 +381,7 @@ export default function GalleryPage() {
                     </div>
                 </div>
 
-                <button className="control-btn" onClick={() => fetchMoreData(true)}>
+                <button className="control-btn" onClick={() => fetchMoreData('random')}>
                     RANDOM
                 </button>
             </div>
