@@ -245,7 +245,6 @@ const MUSEUM_CONFIG = {
 export default function GalleryPage() {
     const [museum, setMuseum] = useState('aic');
     const [category, setCategory] = useState("All");
-    const [era, setEra] = useState("ALL ERAS");
     const [artworks, setArtworks] = useState([]);
     const [page, setPage] = useState(Math.floor(Math.random() * 80) + 1);
     const [isLoading, setIsLoading] = useState(false);
@@ -266,7 +265,7 @@ export default function GalleryPage() {
         setPage(1);
         setHasMore(true);
         fetchMoreData('reset');
-    }, [museum, category, era]);
+    }, [museum, category]);
 
     const fetchMoreData = useCallback(async (action = 'append') => {
         if (isLoading) return;
@@ -290,7 +289,6 @@ export default function GalleryPage() {
             let newArtworks = [];
             let catSearch = category;
             if (category === "All") catSearch = "art";
-            if (era !== "ALL ERAS") catSearch = `${catSearch} ${era}`;
 
             if (museum === 'aic') newArtworks = await fetchAIC(targetPage, catSearch);
             else if (museum === 'cma') newArtworks = await fetchCMA(targetPage, catSearch);
@@ -360,18 +358,6 @@ export default function GalleryPage() {
                         ))}
                     </div>
                 </div>
-
-                <div className="dropdown">
-                    <button className="control-btn" onClick={() => setDropdown(dropdown === 'era' ? null : 'era')}>
-                        {era}
-                    </button>
-                    <div className={`dropdown-menu ${dropdown !== 'era' ? 'hidden' : ''}`}>
-                        <button className={`category-option ${era === 'ALL ERAS' ? 'active' : ''}`} onClick={() => { setEra('ALL ERAS'); setDropdown(null); }}>ALL ERAS</button>
-                        {["18th Century", "19th Century", "20th Century", "Contemporary"].map(e => (
-                            <button key={e} className={`category-option ${era === e ? 'active' : ''}`} onClick={() => { setEra(e); setDropdown(null); }}>{e}</button>
-                        ))}
-                    </div>
-                </div>
                 
                 <div className="dropdown">
                     <button className="control-btn" onClick={() => setDropdown(dropdown === 'museum' ? null : 'museum')}>
@@ -427,7 +413,7 @@ export default function GalleryPage() {
                                         e.stopPropagation(); 
                                         const cleanArtist = modalArt.artist.replace(/ *\([^)]*\) */g, "").trim();
                                         setCategory(`"${cleanArtist}"`); 
-                                        setEra("ALL ERAS"); setShowInfo(false); setModalArt(null); 
+                                        setShowInfo(false); setModalArt(null); 
                                         setTimeout(() => window.scrollTo(0, 0), 10);
                                     }}>VIEW ARTIST</button>
                                 )}
@@ -436,7 +422,7 @@ export default function GalleryPage() {
                                         e.stopPropagation(); 
                                         const cleanCol = modalArt.collectionName.replace(/ *\([^)]*\) */g, "").trim();
                                         setCategory(`"${cleanCol}"`); 
-                                        setEra("ALL ERAS"); setShowInfo(false); setModalArt(null); 
+                                        setShowInfo(false); setModalArt(null); 
                                         setTimeout(() => window.scrollTo(0, 0), 10);
                                     }}>VIEW COLLECTION</button>
                                 )}
