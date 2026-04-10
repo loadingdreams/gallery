@@ -313,10 +313,6 @@ export default function GalleryPage() {
         }
     }, [isLoading, page, museum, category]);
 
-    // Initial load
-    useEffect(() => {
-        fetchMoreData('random');
-    }, [museum, category]);
 
     // Infinite scroll observer
     useEffect(() => {
