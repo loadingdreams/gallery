@@ -52,7 +52,8 @@ async function fetchAIC(page, category) {
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
     
-    return data.data.filter(art => art.image_id).map(art => ({
+    const totalPages = data.pagination?.total_pages || 1;
+    const artworks = data.data.filter(art => art.image_id).map(art => ({
         id: art.id,
         title: art.title || "Untitled",
         artist: art.artist_display ? art.artist_display.split('\n')[0] : "Unknown",
@@ -66,6 +67,7 @@ async function fetchAIC(page, category) {
         thumbUrl: `https://www.artic.edu/iiif/2/${art.image_id}/full/400,/0/default.jpg`,
         highResUrl: `https://www.artic.edu/iiif/2/${art.image_id}/full/843,/0/default.jpg`
     }));
+    return { artworks, totalPages };
 }
 
 // 2. Cleveland Museum of Art
@@ -77,8 +79,8 @@ async function fetchCMA(page, category) {
     const res = await fetch(url);
     if (!res.ok) throw new Error("HTTP " + res.status);
     const data = await res.json();
-
-    return data.data.map(art => ({
+    const totalPages = data.info?.total ? Math.ceil(data.info.total / 12) : 80;
+    const artworks = data.data.map(art => ({
         id: art.id,
         title: art.title || "Untitled",
         artist: art.creators && art.creators.length > 0 ? art.creators[0].description : "Unknown",
@@ -92,6 +94,7 @@ async function fetchCMA(page, category) {
         thumbUrl: art.images && art.images.web ? art.images.web.url : "",
         highResUrl: art.images && art.images.print ? art.images.print.url : (art.images && art.images.web ? art.images.web.url : "")
     })).filter(art => art.thumbUrl !== "");
+    return { artworks, totalPages };
 }
 
 // 3. The Met
@@ -101,8 +104,9 @@ async function fetchMet(page, category) {
     if (!searchRes.ok) throw new Error("HTTP " + searchRes.status);
     const searchData = await searchRes.json();
     
-    if (!searchData.objectIDs) return [];
+    if (!searchData.objectIDs) return { artworks: [], totalPages: 1 };
     
+    const totalPages = Math.ceil(searchData.objectIDs.length / 12);
     const objectIDs = searchData.objectIDs.slice((page-1)*12, page*12);
     const items = await Promise.all(objectIDs.map(async id => {
         const objRes = await fetch(`https://collectionapi.metmuseum.org/public/collection/v1/objects/${id}`);
@@ -110,7 +114,7 @@ async function fetchMet(page, category) {
         return objRes.json();
     }));
 
-    return items.filter(art => art && art.primaryImageSmall).map(art => ({
+    const artworks = items.filter(art => art && art.primaryImageSmall).map(art => ({
         id: art.objectID,
         title: art.title || "Untitled",
         artist: art.artistDisplayName || "Unknown",
@@ -124,6 +128,7 @@ async function fetchMet(page, category) {
         thumbUrl: art.primaryImageSmall,
         highResUrl: art.primaryImage || art.primaryImageSmall
     }));
+    return { artworks, totalPages };
 }
 
 // 4. NYPL (Via Internal Next.js Proxy)
@@ -134,7 +139,7 @@ async function fetchNYPL(page, category) {
     let rawItems = data?.nyplAPI?.response?.result || data?.nyplAPI?.response?.capture || [];
     if (!Array.isArray(rawItems)) rawItems = [rawItems];
     
-    return rawItems.map(art => {
+    const artworks = rawItems.map(art => {
         let thumbUrl = "";
         let highResUrl = "";
         if (art.imageLinks && art.imageLinks.imageLink) {
@@ -157,6 +162,7 @@ async function fetchNYPL(page, category) {
             thumbUrl, highResUrl
         };
     }).filter(art => art.thumbUrl !== "");
+    return { artworks, totalPages: 15 };
 }
 
 // 5. LOC (Via Internal Next.js Proxy)
@@ -165,7 +171,8 @@ async function fetchLOC(page, category) {
     if (!res.ok) throw new Error("LOC server error");
     const data = await res.json();
     
-    return (data.results || []).filter(art => art.image_url && art.image_url.length > 2).map(art => {
+    const totalPages = data.pagination?.total ? Math.min(Math.ceil(data.pagination.total / 25), 50) : 8;
+    const artworks = (data.results || []).filter(art => art.image_url && art.image_url.length > 2).map(art => {
         let thumbUrl = art.image_url.length > 2 ? art.image_url[art.image_url.length - 2] : art.image_url[art.image_url.length - 1];
         let highResUrl = art.image_url[art.image_url.length - 1];
         if (thumbUrl && thumbUrl.startsWith('//')) thumbUrl = 'https:' + thumbUrl;
@@ -183,6 +190,7 @@ async function fetchLOC(page, category) {
             longDesc: "", creditLine: "", thumbUrl, highResUrl
         };
     });
+    return { artworks, totalPages };
 }
 
 // 6. Smithsonian (Via Internal Next.js Proxy)
@@ -191,7 +199,10 @@ async function fetchSmithsonian(page, category) {
     if (!res.ok) throw new Error("Smithsonian server error");
     const data = await res.json();
     
-    return (data.response?.rows || []).map(item => {
+    const totalCount = data.response?.rowCount || 0;
+    const totalPages = totalCount ? Math.min(Math.ceil(totalCount / 10), 100) : 50;
+    
+    const artworks = (data.response?.rows || []).map(item => {
         const title = item.title || "Untitled";
         const meta = item.content?.descriptiveNonRepeating || {};
         const mediaList = meta.online_media?.media || [];
@@ -211,7 +222,6 @@ async function fetchSmithsonian(page, category) {
             else if (hiRes) thumbUrl = hiRes.url;
         }
 
-        // Find primary artist
         let artist = "Unknown";
         if (item.content?.freetext?.name) {
             const creator = item.content.freetext.name.find(n => n.label === "Artist" || n.label === "Creator");
@@ -230,6 +240,7 @@ async function fetchSmithsonian(page, category) {
             id: item.id
         };
     }).filter(Boolean);
+    return { artworks, totalPages };
 }
 
 const MUSEUM_CONFIG = {
@@ -247,6 +258,7 @@ export default function GalleryPage() {
     const [category, setCategory] = useState("All");
     const [artworks, setArtworks] = useState([]);
     const [page, setPage] = useState(Math.floor(Math.random() * 80) + 1);
+    const [totalPages, setTotalPages] = useState(80);
     const [isLoading, setIsLoading] = useState(false);
     
     const [dropdown, setDropdown] = useState(null); // 'museum' or 'category'
@@ -270,32 +282,27 @@ export default function GalleryPage() {
     const fetchMoreData = useCallback(async (action = 'append') => {
         if (isLoading) return;
         setIsLoading(true);
-        let maxPage = 80;
-        if (museum === 'loc') maxPage = 8;
-        if (museum === 'nypl') maxPage = 15;
-        if (museum === 'smithsonian') maxPage = 50;
-
-        // Custom string queries (Artists/Collections) rarely have 80 pages of data.
-        // Cap the randomized offset heavily to prevent massive blank pages.
-        if (!["All", "Painting", "Photograph", "Sculpture", "Print", "Textile", "Drawing and Watercolor"].includes(category)) {
-            maxPage = 2; 
-        }
+        let maxPage = totalPages;
         
         let targetPage = page;
         if (action === 'reset') targetPage = 1;
-        if (action === 'random') targetPage = Math.floor(Math.random() * maxPage) + 1;
+        if (action === 'random') targetPage = Math.max(1, Math.floor(Math.random() * totalPages) + 1);
         
         try {
             let newArtworks = [];
             let catSearch = category;
             if (category === "All") catSearch = "art";
 
-            if (museum === 'aic') newArtworks = await fetchAIC(targetPage, catSearch);
-            else if (museum === 'cma') newArtworks = await fetchCMA(targetPage, catSearch);
-            else if (museum === 'met') newArtworks = await fetchMet(targetPage, catSearch);
-            else if (museum === 'nypl') newArtworks = await fetchNYPL(targetPage, catSearch);
-            else if (museum === 'loc') newArtworks = await fetchLOC(targetPage, catSearch);
-            else if (museum === 'smithsonian') newArtworks = await fetchSmithsonian(targetPage, catSearch);
+            let result;
+            if (museum === 'aic') result = await fetchAIC(targetPage, catSearch);
+            else if (museum === 'cma') result = await fetchCMA(targetPage, catSearch);
+            else if (museum === 'met') result = await fetchMet(targetPage, catSearch);
+            else if (museum === 'nypl') result = await fetchNYPL(targetPage, catSearch);
+            else if (museum === 'loc') result = await fetchLOC(targetPage, catSearch);
+            else if (museum === 'smithsonian') result = await fetchSmithsonian(targetPage, catSearch);
+            
+            newArtworks = result?.artworks ?? result ?? [];
+            if (result?.totalPages) setTotalPages(result.totalPages);
             
             setArtworks(prev => action === 'append' ? [...prev, ...newArtworks] : newArtworks);
             setPage(targetPage + 1);
