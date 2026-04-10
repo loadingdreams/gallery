@@ -58,7 +58,7 @@ async function fetchAIC(page, category) {
         artist: art.artist_display ? art.artist_display.split('\n')[0] : "Unknown",
         date: art.date_display || "",
         medium: art.medium_display || "",
-        location: "Art Institute of Chicago" + (art.place_of_origin ? ` (${art.place_of_origin})` : ""),
+        location: "Art Institute of Chicago",
         collectionName: art.department_title || "",
         shortDesc: "",
         longDesc: art.description || "",
