@@ -274,13 +274,15 @@ export default function GalleryPage() {
     const [hasMore, setHasMore] = useState(true);
 
     useEffect(() => {
+        setIsLoading(false);
         setPage(1);
         setHasMore(true);
+        setArtworks([]);
         fetchMoreData('reset');
     }, [museum, category]);
 
     const fetchMoreData = useCallback(async (action = 'append') => {
-        if (isLoading) return;
+        if (isLoading && action !== 'reset') return;
         setIsLoading(true);
         let maxPage = totalPages;
         
