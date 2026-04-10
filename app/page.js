@@ -347,6 +347,13 @@ export default function GalleryPage() {
     return (
         <main>
             <div className={`controls ${!scrollControlsVisible ? 'hide-scroll' : ''}`}>
+                <button className="control-btn" onClick={() => { 
+                    setMuseum('aic'); 
+                    setCategory('All'); 
+                    window.scrollTo(0, 0); 
+                }}>
+                    HOME
+                </button>
                 <div className="dropdown">
                     <button className="control-btn" onClick={() => setDropdown(dropdown === 'category' ? null : 'category')}>
                         {category === 'All' ? 'MEDIUM' : category}
