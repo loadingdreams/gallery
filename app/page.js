@@ -44,7 +44,7 @@ function getCategoryParam(museum, cat) {
 
 // 1. Art Institute of Chicago
 async function fetchAIC(page, category) {
-    let url = `https://api.artic.edu/api/v1/artworks/search?limit=12&page=${page}&fields=id,title,artist_display,image_id,date_display,medium_display,place_of_origin,credit_line,description`;
+    let url = `https://api.artic.edu/api/v1/artworks/search?limit=12&page=${page}&fields=id,title,artist_display,image_id,date_display,medium_display,place_of_origin,credit_line,description,department_title`;
     const catSearch = getCategoryParam('aic', category);
     if (category !== "All") url += `&q=${encodeURIComponent(catSearch)}`;
     
@@ -59,6 +59,7 @@ async function fetchAIC(page, category) {
         date: art.date_display || "",
         medium: art.medium_display || "",
         location: "Art Institute of Chicago" + (art.place_of_origin ? ` (${art.place_of_origin})` : ""),
+        collectionName: art.department_title || "",
         shortDesc: "",
         longDesc: art.description || "",
         creditLine: art.credit_line || "",
@@ -84,6 +85,7 @@ async function fetchCMA(page, category) {
         date: art.creation_date || "",
         medium: art.technique || "",
         location: "Cleveland Museum of Art",
+        collectionName: art.department || art.collection || "",
         shortDesc: art.tombstone || "",
         longDesc: art.fun_fact || art.description || "",
         creditLine: art.creditline || "",
@@ -115,6 +117,7 @@ async function fetchMet(page, category) {
         date: art.objectDate || "",
         medium: art.medium || "",
         location: "The Met",
+        collectionName: art.department || "",
         shortDesc: "",
         longDesc: "",
         creditLine: art.creditLine || "",
@@ -149,6 +152,7 @@ async function fetchNYPL(page, category) {
             date: art.dateString || "",
             medium: art.typeOfResource || "Archive",
             location: "New York Public Library",
+            collectionName: "",
             shortDesc: "", longDesc: "", creditLine: "",
             thumbUrl, highResUrl
         };
@@ -174,6 +178,7 @@ async function fetchLOC(page, category) {
             date: art.date || (art.created_published_date ? art.created_published_date[0] : ""),
             medium: art.medium ? (Array.isArray(art.medium) ? art.medium.join(", ") : art.medium) : "",
             location: "Library of Congress",
+            collectionName: art.collection ? (Array.isArray(art.collection) ? art.collection[0] : art.collection) : "",
             shortDesc: art.description ? (Array.isArray(art.description) ? art.description[0] : art.description) : "",
             longDesc: "", creditLine: "", thumbUrl, highResUrl
         };
@@ -219,6 +224,7 @@ async function fetchSmithsonian(page, category) {
             date: meta.date_display || "Date Unknown",
             medium: meta.data_source || "Smithsonian Institution",
             location: meta.data_source || "Smithsonian Institution",
+            collectionName: meta.data_source || "",
             thumbUrl,
             highResUrl,
             id: item.id
@@ -405,6 +411,18 @@ export default function GalleryPage() {
                             {(modalArt?.shortDesc || modalArt?.longDesc || modalArt?.creditLine) && (
                                 <button id="btn-read-more" className="control-btn" onClick={(e) => {e.stopPropagation(); setInfoExpanded(true);}}>+</button>
                             )}
+                            <div style={{ marginTop: '2.5rem', display: 'flex', gap: '2rem', justifyContent: 'center', pointerEvents: 'auto' }}>
+                                {modalArt?.artist && modalArt.artist !== "Unknown" && (
+                                    <button className="control-btn" style={{opacity: 0.8, fontSize: '0.85rem'}} onClick={(e) => { 
+                                        e.stopPropagation(); setCategory(modalArt.artist); setEra("ALL ERAS"); setShowInfo(false); setModalArt(null); 
+                                    }}>VIEW ARTIST</button>
+                                )}
+                                {modalArt?.collectionName && (
+                                    <button className="control-btn" style={{opacity: 0.8, fontSize: '0.85rem'}} onClick={(e) => { 
+                                        e.stopPropagation(); setCategory(modalArt.collectionName); setEra("ALL ERAS"); setShowInfo(false); setModalArt(null); 
+                                    }}>VIEW COLLECTION</button>
+                                )}
+                            </div>
                         </div>
                         <div id="info-expanded" className={!infoExpanded ? 'hidden' : ''}>
                             <h2>{modalArt?.title}</h2>
